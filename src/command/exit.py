@@ -1,3 +1,4 @@
+import os
 import sys
 from .command import Command
 
@@ -11,4 +12,4 @@ class CmdExit(Command):
 
 	def execute(self, sp):
 		print("end of program")
-		sys.exit(1)
+		sys.exit(os.EX_OK)

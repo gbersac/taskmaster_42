@@ -1,1 +1,1 @@
-python3 src/main
+python3 src $1
