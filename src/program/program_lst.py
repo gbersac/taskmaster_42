@@ -13,3 +13,9 @@ class ProgramLst:
 		for prog in self.lst:
 			if prog.autostart:
 				prog.execute()
+
+	"""Check the state of all the programs"""
+	def check(self):
+		for prog in self.lst:
+			prog.relaunch_if_needed()
+

@@ -1,13 +1,17 @@
 import os
 import yaml
 import sys
+import select
+import shlex
 
 import command.command_list
 from program.program import Program
 from program.program_lst import ProgramLst
 
 def execute_command(s):
-	sp = s.split(' ')
+	if not s.rstrip():
+		return
+	sp = shlex.split(s)
 	for cmd in command.command_list.cmd_list:
 		if cmd.is_command(sp):
 			cmd.execute(sp)
@@ -54,7 +58,16 @@ def load_conf_files():
 if __name__ == '__main__':
 	progs = load_conf_files()
 	progs.launch()
+
+	# Reading the stdin
+	sys.stdout.write("taskmaster>>> ")
 	while True:
-	    s = input("taskmaster>>> ")
-	    execute_command(s)
-	    sys.stdout.flush()
+		ready = select.select([sys.stdin], [], [], 0.1)[0]
+		if not ready:
+			progs.check()
+		else:
+			for file in ready:
+				line = file.readline()
+				if line:
+					execute_command(line)
+					sys.stdout.write("taskmaster>>> ")

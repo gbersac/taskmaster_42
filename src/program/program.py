@@ -1,5 +1,20 @@
 import os
+from enum import Enum
 import shlex, subprocess
+
+class AutoRestartEnum(Enum):
+	def fromstr(s):
+		if s == "never":
+			return AutoRestartEnum.never
+		if s == "unexpected":
+			return AutoRestartEnum.unexpected
+		if s == "always":
+			return AutoRestartEnum.always
+
+	never = 0
+	unexpected = 1
+	always = 2
+
 
 class ProgramWithoutCmdError(Exception):
     def __init__(self, _name):
@@ -22,7 +37,7 @@ class Program:
 	"""Whether to start this program at launch or not"""
 	autostart = True
 	"""Whether the program should be restarted always, never, or on unexpected exits only"""
-	autorestart = False
+	autorestart = AutoRestartEnum.unexpected
 	"""Which return codes represent an "expected" exit status"""
 	exitcodes = os.EX_OK
 	"""How long the program should be running after it’s started for it to be considered successfully started"""
@@ -44,6 +59,8 @@ class Program:
 	stderr = None
 	""" An umask to set before launching the program"""
 	umask = 0o22
+
+	popen = None
 
 	def open_standard_files(self, file_name):
 		if file_name == None:
@@ -69,12 +86,35 @@ class Program:
 			raise ProgramWithoutCmdError(_name)
 			return
 		self.cmd = shlex.split(self.cmd)
+		self.autorestart = AutoRestartEnum.fromstr(self.autorestart)
 
 	def execute(self):
 		try:
 			stdoutf = self.open_standard_files(self.stdout)
 			stderrf = self.open_standard_files(self.stderr)
-			subprocess.Popen(self.cmd, stdout = stdoutf, stderr = stderrf)
+			self.popen = subprocess.Popen(self.cmd,
+					stdout = stdoutf, stderr = stderrf)
 		except Exception as e:
 			print("Can't launch program {0} because {1}.".
 					format(self.name, e))
+
+	def return_code_is_allowed(self, ec):
+		if not isinstance(self.exitcodes, basestring):
+			return ec == self.exitcodes
+		for rc in exitcodes:
+			if ec == rc:
+				return True
+		return False
+
+	def relaunch(self):
+		self.execute()
+
+	def relaunch_if_needed(self):
+		if not self.popen:
+			return
+		rc = self.popen.poll()
+		if rc and not self.autorestart == AutoRestartEnum.never:
+			if self.autorestart == AutoRestartEnum.unexpected and \
+					not self.return_code_is_allowed(rc):
+				return
+			self.relaunch()

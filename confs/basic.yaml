@@ -1,6 +1,7 @@
 blop:
-    cmd: "ls -l"
-    stdout: "ls.txt"
+    cmd: "tail -f ls.txt"
+    # autorestart: never
+    # stdout: "tail.txt"
 
 glup:
     cmd: "echo glup"
