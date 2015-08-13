@@ -1,4 +1,5 @@
 import os
+import shlex, subprocess
 
 class ProgramWithoutCmdError(Exception):
     def __init__(self, _name):
@@ -38,11 +39,22 @@ class Program:
 	"""A working directory to set before launching the program"""
 	workingdir = False
 	"""Options to discard the program’s stdout or to redirect them to files"""
-	stdout = False
+	stdout = None
 	"""Options to discard the program’s stderr or to redirect them to files"""
-	stderr = False
+	stderr = None
 	""" An umask to set before launching the program"""
 	umask = 0o22
+
+	def open_standard_files(self, file_name):
+		if file_name == None:
+			return
+		try:
+			fd = open(file_name, "a")
+			return fd
+		except Exception as e:
+			print("Stantard file for {0} can't be open because {1}.".
+					format(self.name, e))
+			return None
 
 	def __init__(self, _name, dico):
 		"""
@@ -56,3 +68,13 @@ class Program:
 		if not self.cmd:
 			raise ProgramWithoutCmdError(_name)
 			return
+		self.cmd = shlex.split(self.cmd)
+
+	def execute(self):
+		try:
+			stdoutf = self.open_standard_files(self.stdout)
+			stderrf = self.open_standard_files(self.stderr)
+			subprocess.Popen(self.cmd, stdout = stdoutf, stderr = stderrf)
+		except Exception as e:
+			print("Can't launch program {0} because {1}.".
+					format(self.name, e))
