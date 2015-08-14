@@ -9,6 +9,6 @@ class CmdHelp(Command):
 	def __init__(self):
 		super(CmdHelp, self).__init__()
 
-	def execute(self, sp):
+	def execute(self, sp, progs):
 		for cmd in command.command_list.cmd_list:
 			cmd.print_help()

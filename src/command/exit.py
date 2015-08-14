@@ -10,6 +10,7 @@ class CmdExit(Command):
 	def __init__(self):
 		super(CmdExit, self).__init__()
 
-	def execute(self, sp):
+	def execute(self, sp, progs):
 		print("end of program")
+		progs.kill_all()
 		sys.exit(os.EX_OK)

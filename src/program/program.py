@@ -60,6 +60,10 @@ class Program:
 	""" An umask to set before launching the program"""
 	umask = 0o22
 
+	"""
+	The processes objects.
+	https://docs.python.org/2/library/subprocess.html#popen-objects
+	"""
 	popen = None
 
 	def open_standard_files(self, file_name):
@@ -118,3 +122,8 @@ class Program:
 					not self.return_code_is_allowed(rc):
 				return
 			self.relaunch()
+
+	def kill(self):
+		if self.popen:
+			self.popen.terminate()
+			self.popen.kill()

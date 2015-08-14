@@ -3,18 +3,21 @@ import yaml
 import sys
 import select
 import shlex
+import signal
 
 import command.command_list
 from program.program import Program
 from program.program_lst import ProgramLst
 
-def execute_command(s):
+progs = []
+
+def execute_command(s, progs):
 	if not s.rstrip():
 		return
 	sp = shlex.split(s)
 	for cmd in command.command_list.cmd_list:
 		if cmd.is_command(sp):
-			cmd.execute(sp)
+			cmd.execute(sp, progs)
 			return
 	print("No command named " + sp[0])
 
@@ -55,7 +58,11 @@ def load_conf_files():
 		progs = progs + load_one_conf_files(file_name)
 	return ProgramLst(progs)
 
+def signal_handler(signal, frame):
+    execute_command("exit", progs)
+
 if __name__ == '__main__':
+	signal.signal(signal.SIGINT, signal_handler)
 	progs = load_conf_files()
 	progs.launch()
 
@@ -69,5 +76,5 @@ if __name__ == '__main__':
 			for file in ready:
 				line = file.readline()
 				if line:
-					execute_command(line)
+					execute_command(line, progs)
 					sys.stdout.write("taskmaster>>> ")

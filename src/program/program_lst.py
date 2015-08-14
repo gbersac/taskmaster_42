@@ -19,3 +19,7 @@ class ProgramLst:
 		for prog in self.lst:
 			prog.relaunch_if_needed()
 
+	def kill_all(self):
+		for prog in self.lst:
+			prog.kill()
+

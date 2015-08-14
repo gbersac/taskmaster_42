@@ -22,7 +22,7 @@ class Command:
 
 	strg: the splitted command line.
 	"""
-	def execute(self, sp):
+	def execute(self, sp, progs):
 		raise NotImplementedError("Subclass must implement abstract method")
 
 	def print_help(self):
