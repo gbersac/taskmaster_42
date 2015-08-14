@@ -1,8 +1,9 @@
 blop:
     cmd: "tail -f ls.txt"
+    numprocs: 3
     # autorestart: never
     # stdout: "tail.txt"
 
 glup:
     cmd: "echo glup"
-    autostart: False
+    # autostart: False
