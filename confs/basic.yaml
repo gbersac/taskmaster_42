@@ -5,7 +5,8 @@
 #     stdout: "tail.txt"
 
 glup:
-    cmd: "echo $PATH"
+    cmd: "ls"
+    workingdir: /tmp
     env:
         STARTED_BY: taskmaster
         ANSWER: 42

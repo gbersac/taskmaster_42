@@ -53,7 +53,7 @@ class Program:
 	"""The command to use to launch the program"""
 	cmd = False
 	"""A working directory to set before launching the program"""
-	workingdir = False
+	workingdir = None
 	"""Options to discard the program’s stdout or to redirect them to files"""
 	stdout = None
 	"""Options to discard the program’s stderr or to redirect them to files"""
@@ -76,7 +76,6 @@ class Program:
 		if not self.cmd:
 			raise ProgramWithoutCmdError(_name)
 			return
-		# self.cmd = shlex.split(self.cmd)
 		self.autorestart = AutoRestartEnum.fromstr(self.autorestart)
 		self.processes = []
 		for i in range(0, self.numprocs):
@@ -93,7 +92,7 @@ class Program:
 	def execute(self):
 		new_env = self.get_expanded_env()
 		for proc in self.processes:
-			proc.execute(self.stdout, self.stderr, new_env)
+			proc.execute(self.stdout, self.stderr, new_env, self.workingdir)
 
 	def relaunch(self):
 		self.execute()
