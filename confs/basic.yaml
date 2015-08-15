@@ -1,9 +1,12 @@
-blop:
-    cmd: "tail -f ls.txt"
-    numprocs: 3
-    # autorestart: never
-    # stdout: "tail.txt"
+# blop:
+#     cmd: "tail -f ls.txt"
+#     numprocs: 3
+#     autorestart: never
+#     stdout: "tail.txt"
 
 glup:
-    cmd: "echo glup"
+    cmd: "echo $PATH"
+    env:
+        STARTED_BY: taskmaster
+        ANSWER: 42
     # autostart: False

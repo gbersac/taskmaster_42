@@ -26,12 +26,13 @@ class Process:
 					format(self.name, e))
 			return None
 
-	def execute(self, stdout, stderr):
+	def execute(self, stdout, stderr, nenv):
 		try:
 			stdoutf = self.open_standard_files(stdout)
 			stderrf = self.open_standard_files(stderr)
 			self.popen = subprocess.Popen(self.cmd,
-					stdout = stdoutf, stderr = stderrf)
+					stdout = stdoutf, stderr = stderrf,
+					env = nenv, shell = True)
 			print(self.popen.pid)
 		except Exception as e:
 			print("Can't launch process {0} because {1}.".

@@ -76,15 +76,24 @@ class Program:
 		if not self.cmd:
 			raise ProgramWithoutCmdError(_name)
 			return
-		self.cmd = shlex.split(self.cmd)
+		# self.cmd = shlex.split(self.cmd)
 		self.autorestart = AutoRestartEnum.fromstr(self.autorestart)
 		self.processes = []
 		for i in range(0, self.numprocs):
 			self.processes.append(Process(self.name, self.cmd))
 
+	def get_expanded_env(self):
+		new_env = os.environ
+		if not hasattr(self, "env"):
+			return new_env
+		for k, v in self.env.items():
+			new_env[k] = str(v)
+		return new_env
+
 	def execute(self):
+		new_env = self.get_expanded_env()
 		for proc in self.processes:
-			proc.execute(self.stdout, self.stderr)
+			proc.execute(self.stdout, self.stderr, new_env)
 
 	def relaunch(self):
 		self.execute()
