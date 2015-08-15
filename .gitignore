@@ -1,6 +1,7 @@
 # file
 ls.txt
 tail.txt
+test_umask
 
 # system files
 .DS_Store

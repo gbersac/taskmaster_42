@@ -4,10 +4,15 @@
 #     autorestart: never
 #     stdout: "tail.txt"
 
-glup:
-    cmd: "ls"
-    workingdir: /tmp
-    env:
-        STARTED_BY: taskmaster
-        ANSWER: 42
-    # autostart: False
+#should print the ls of tmp
+# test_workingdir:
+#     cmd: "ls"
+#     workingdir: /tmp
+#     env:
+#         STARTED_BY: taskmaster
+#         ANSWER: 42
+
+# the permission of test_umask should be none
+test_umask:
+    cmd: "rm -f test_umask; touch test_umask ; ls -l test_umask"
+    umask: 777

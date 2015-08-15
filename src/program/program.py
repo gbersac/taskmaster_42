@@ -59,7 +59,7 @@ class Program:
 	"""Options to discard the program’s stderr or to redirect them to files"""
 	stderr = None
 	""" An umask to set before launching the program"""
-	umask = 0o22
+	umask = 22
 
 	"""List of all the processes associated with this program."""
 	processes = []
@@ -92,7 +92,8 @@ class Program:
 	def execute(self):
 		new_env = self.get_expanded_env()
 		for proc in self.processes:
-			proc.execute(self.stdout, self.stderr, new_env, self.workingdir)
+			proc.execute(self.stdout, self.stderr, new_env, self.workingdir, \
+					"umask {:03d};".format(self.umask))
 
 	def relaunch(self):
 		self.execute()

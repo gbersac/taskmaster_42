@@ -26,10 +26,11 @@ class Process:
 					format(self.name, e))
 			return None
 
-	def execute(self, stdout, stderr, nenv, workingdir):
+	def execute(self, stdout, stderr, nenv, workingdir, umask):
 		try:
 			stdoutf = self.open_standard_files(stdout)
 			stderrf = self.open_standard_files(stderr)
+			self.cmd = umask + self.cmd
 			self.popen = subprocess.Popen(self.cmd,
 					stdout = stdoutf, stderr = stderrf,
 					env = nenv, shell = True, cwd = workingdir)
