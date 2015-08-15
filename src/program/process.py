@@ -1,6 +1,8 @@
 import subprocess
 import os.path
 
+from .auto_restart_enum import AutoRestartEnum
+
 class Process:
 	"""
 	A process is a running instance of a program
@@ -8,12 +10,12 @@ class Process:
 	This is a wrapper over a python popen object :
 	https://docs.python.org/2/library/subprocess.html#popen-objects
 	"""
-
 	popen = None
 
 	def __init__(self, name, cmd):
 		self.cmd = cmd
 		self.name = name
+		self.nb_start_retries = 0
 
 	def open_standard_files(self, file_name):
 		if file_name == None:
@@ -26,15 +28,23 @@ class Process:
 					format(self.name, e))
 			return None
 
-	def execute(self, stdout, stderr, nenv, workingdir, umask):
+	def set_execution_vars(self, stdout, stderr, nenv, workingdir, umask):
+		self.stdout = stdout
+		self.stderr = stderr
+		self.env = nenv
+		self.workingdir = workingdir
+		self.umask = umask
+
+	def execute(self):
+		"""Require that set_execution_vars has already been called"""
+		self.nb_start_retries += 1
 		try:
-			stdoutf = self.open_standard_files(stdout)
-			stderrf = self.open_standard_files(stderr)
-			self.cmd = umask + self.cmd
+			stdoutf = self.open_standard_files(self.stdout)
+			stderrf = self.open_standard_files(self.stderr)
+			self.cmd = self.umask + self.cmd
 			self.popen = subprocess.Popen(self.cmd,
 					stdout = stdoutf, stderr = stderrf,
-					env = nenv, shell = True, cwd = workingdir)
-			print(self.popen.pid)
+					env = self.env, shell = True, cwd = self.workingdir)
 		except Exception as e:
 			print("Can't launch process {0} because {1}.".
 					format(self.name, e))
@@ -47,15 +57,18 @@ class Process:
 				return True
 		return False
 
-	def relaunch_if_needed(self, aurtorestart, exitcodes):
+	def relaunch_if_needed(self, autorestart, exitcodes, startretries):
+		"""Require that set_execution_vars has already been called"""
 		if not self.popen:
 			return False
 		rc = self.popen.poll()
 		if rc:
-			if self.autorestart == AutoRestartEnum.unexpected and \
+			if self.nb_start_retries > startretries:
+				return
+			if autorestart == AutoRestartEnum.unexpected and \
 					not self.return_code_is_allowed(rc, exitcodes):
 				return False
-			self.relaunch()
+			self.execute()
 			return True
 		return False
 

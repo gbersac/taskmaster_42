@@ -13,6 +13,11 @@
 #         ANSWER: 42
 
 # the permission of test_umask should be none
-test_umask:
-    cmd: "rm -f test_umask; touch test_umask ; ls -l test_umask"
-    umask: 777
+# test_umask:
+#     cmd: "rm -f test_umask; touch test_umask ; ls -l test_umask"
+#     umask: 777
+
+# it must attempt 3 time to relaunch this program (total tries = 4)
+test_startretries:
+    cmd: "cat no_file"
+    startretries: 3

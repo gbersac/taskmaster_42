@@ -1,21 +1,7 @@
 import os
-from enum import Enum
 import shlex, subprocess
 from .process import Process
-
-class AutoRestartEnum(Enum):
-	def fromstr(s):
-		if s == "never":
-			return AutoRestartEnum.never
-		if s == "unexpected":
-			return AutoRestartEnum.unexpected
-		if s == "always":
-			return AutoRestartEnum.always
-
-	never = 0
-	unexpected = 1
-	always = 2
-
+from .auto_restart_enum import AutoRestartEnum
 
 class ProgramWithoutCmdError(Exception):
     def __init__(self, _name):
@@ -92,17 +78,19 @@ class Program:
 	def execute(self):
 		new_env = self.get_expanded_env()
 		for proc in self.processes:
-			proc.execute(self.stdout, self.stderr, new_env, self.workingdir, \
-					"umask {:03d};".format(self.umask))
+			proc. set_execution_vars(self.stdout, self.stderr, new_env, \
+					self.workingdir, "umask {:03d};".format(self.umask))
+			proc.execute()
 
 	def relaunch(self):
 		self.execute()
 
 	def relaunch_if_needed(self):
-		if self.autorestart == AutoRestartEnum.never:
+		if self.autorestart == AutoRestartEnum.never or self.startretries < 1:
 			return
 		for proc in self.processes:
-			proc.relaunch_if_needed(self.autorestart, self.exitcodes)
+			proc.relaunch_if_needed(self.autorestart, self.exitcodes,
+					self.startretries)
 
 	def kill(self):
 		for proc in self.processes:
