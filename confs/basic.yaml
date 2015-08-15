@@ -17,7 +17,13 @@
 #     cmd: "rm -f test_umask; touch test_umask ; ls -l test_umask"
 #     umask: 777
 
+# quitting the program must display sig_quit
+test_stopsignal:
+    cmd: "trap 'echo sig_int' 2 ; trap 'echo sig_quit' 3 ; tail -f ls.txt"
+    stopsignal: quit
+
 # it must attempt 3 time to relaunch this program (total tries = 4)
-test_startretries:
-    cmd: "cat no_file"
-    startretries: 3
+# test_startretries:
+#     cmd: "cat no_file"
+#     startretries: 3
+

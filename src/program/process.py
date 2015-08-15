@@ -1,11 +1,12 @@
 import subprocess
 import os.path
+import signal
 
 from .auto_restart_enum import AutoRestartEnum
 
 class Process:
 	"""
-	A process is a running instance of a program
+	A process is an instance of a program.
 
 	This is a wrapper over a python popen object :
 	https://docs.python.org/2/library/subprocess.html#popen-objects
@@ -80,8 +81,16 @@ class Process:
 		else:
 			return True
 
-	def kill(self):
+	def print_signal(stopsignal):
+		if stopsignal == signal.SIGINT:
+			return "SIGINT"
+		if stopsignal == signal.SIGUSR1:
+			return "SIGUSR1"
+		if stopsignal == signal.SIGQUIT:
+			return "SIGQUIT"
+
+	def kill(self, stopsignal):
 		if self.popen and not self.popen.poll():
 			if Process.check_pid_is_alive(self.popen.pid):
-				self.popen.terminate()
-				self.popen.kill()
+				# print("signal ", Process.print_signal(stopsignal))
+				os.kill(self.popen.pid, stopsignal)

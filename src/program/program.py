@@ -1,5 +1,8 @@
 import os
-import shlex, subprocess
+import shlex
+import subprocess
+import signal
+
 from .process import Process
 from .auto_restart_enum import AutoRestartEnum
 
@@ -9,6 +12,13 @@ class ProgramWithoutCmdError(Exception):
 
     def __str__(self):
         return 'program ' + self.name + ' has no cmd attribute'
+
+class UnknowSignalError(Exception):
+    def __init__(self, _name):
+        self.name = _name
+
+    def __str__(self):
+        return 'unknow signal ' + self.name
 
 class Program:
 	"""
@@ -32,7 +42,7 @@ class Program:
 	"""How many times a restart should be attempted before aborting"""
 	startretries = 0
 	"""Which signal should be used to stop (i.e. exit gracefully) the program"""
-	stopsignal = "STOP"
+	stopsignal = signal.SIGTERM
 	"""How long to wait after a graceful stop before killing the program"""
 	stoptime = 1
 
@@ -50,6 +60,24 @@ class Program:
 	"""List of all the processes associated with this program."""
 	processes = []
 
+	def signal_from_str(s):
+		s = s.upper()
+		if s == "TERM":
+			return signal.SIGTERM
+		if s == "HUP":
+			return signal.SIGHUP
+		if s == "INT":
+			return signal.SIGINT
+		if s == "QUIT":
+			return signal.SIGQUIT
+		if s == "KILL":
+			return signal.SIGKILL
+		if s == "USR1":
+			return signal.SIGUSR1
+		if s == "USR2":
+			return signal.SIGUSR2
+		raise UnknowSignalError()
+
 	def __init__(self, _name, dico):
 		"""
 		dico:	parsed from the yaml conf file.
@@ -64,6 +92,8 @@ class Program:
 			return
 		self.autorestart = AutoRestartEnum.fromstr(self.autorestart)
 		self.processes = []
+		if type(self.stopsignal) == str:
+			self.stopsignal = Program.signal_from_str(self.stopsignal)
 		for i in range(0, self.numprocs):
 			self.processes.append(Process(self.name, self.cmd))
 
@@ -94,4 +124,4 @@ class Program:
 
 	def kill(self):
 		for proc in self.processes:
-			proc.kill()
+			proc.kill(self.stopsignal)
