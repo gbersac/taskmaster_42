@@ -1,86 +1,66 @@
-import curses
+import threading
+import cmd
 import os
-import yaml
 import sys
 import select
 import shlex
 import signal
+import readline
 
-import command.command_list
+from command import exit
 from program.program import Program
 from program.program_lst import ProgramLst
 
-progs = []
-
-def execute_command(s, progs):
-	if not s.rstrip():
-		return
-	sp = shlex.split(s)
-	for cmd in command.command_list.cmd_list:
-		if cmd.is_command(sp):
-			cmd.execute(sp, progs)
-			return
-	print("No command named " + sp[0])
-
-
-def parse_yaml_file(f, file_name):
-	try:
-		parse_conf_file = yaml.load(f)
-		return parse_conf_file
-	except Exception as e:
-		print("Can't parse file {0} because :\n{1}"
-				.format(file_name, e))
-
-def load_one_conf_files(file_name):
-	try:
-		f = open(file_name, 'r')
-		parse_conf_file = parse_yaml_file(f, file_name)
-		progs = []
-		for k, v in parse_conf_file.items():
-			try:
-				prog = Program(k, v)
-				progs.append(prog)
-			except Exception as e:
-				print("Program error {0}".format(e))
-		return progs
-	except IOError as e:
-		print("Impossible to open file {0} because {1}"
-				.format(file_name, e.strerror))
-	return False
-
-
-def load_conf_files():
-	args = sys.argv[1:]
-	if len(args) < 1:
-		print("Usage ./taskmaster conf_file.yaml")
-		exit(os.EX_OK)
-	progs = []
-	for file_name in args:
-		progs = progs + load_one_conf_files(file_name)
-	return ProgramLst(progs)
-
-def print_command_prompt():
-	sys.stdout.write("taskmaster>>> ")
-	sys.stdout.flush()
+progs = None
+progs_lock = None
+interf = None
 
 def signal_handler(signal, frame):
-	if type(progs) == ProgramLst:
-		execute_command("exit", progs)
+	if interf:
+		interf.quit()
+	exit.execute(progs)
+
+def thread_check_progs():
+	"""
+	Function executed in the thread for checking the state of
+	all the progs
+	"""
+	while True:
+		progs_lock.acquire(True)
+		progs.check()
+		progs_lock.release()
+
+class CommandInterface(cmd.Cmd):
+	"""Command line argument utilities."""
+
+	prompt = "taskmaster>>> "
+
+	def cmdloop(self):
+		return cmd.Cmd.cmdloop(self)
+
+	def do_exit(self, line):
+		exit.execute(progs)
+
+	def do_EOF(self, line):
+		exit.execute(progs)
+		return True
+
+	def postloop(self):
+		print
 
 if __name__ == '__main__':
+	# create signal handler
 	signal.signal(signal.SIGINT, signal_handler)
-	progs = load_conf_files()
-	progs.launch()
 
-	# Reading the stdin
-	print_command_prompt()
-	while True:
-		ready = select.select([sys.stdin], [], [], 0.1)[0]
-		if not ready:
-			progs.check()
-		else:
-			for file in ready:
-				line = file.readline()
-				if line:
-					execute_command(line, progs)
-					print_command_prompt()
+	# read progs
+	progs = ProgramLst()
+	progs.launch()
+	progs_lock = threading.Lock()
+
+	# launch a thread to test progs
+	t = threading.Thread(target = thread_check_progs)
+	t.daemon = True
+	t.start()
+
+	# command loop
+	CommandInterface().cmdloop()
