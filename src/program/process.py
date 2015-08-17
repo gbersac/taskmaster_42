@@ -1,6 +1,8 @@
+import types
 import subprocess
 import os.path
 import signal
+import datetime
 
 from .auto_restart_enum import AutoRestartEnum
 
@@ -46,28 +48,51 @@ class Process:
 			self.popen = subprocess.Popen(self.cmd,
 					stdout = stdoutf, stderr = stderrf,
 					env = self.env, shell = True, cwd = self.workingdir)
+			self.starttime = datetime.datetime.now()
+			self.closetime = None
 		except Exception as e:
 			print("Can't launch process {0} because {1}.".
 					format(self.name, e))
 
 	def return_code_is_allowed(self, rc, exitcodes):
-		if not isinstance(exitcodes, basestring):
+		# if exitcodes is only one code
+		if not type(exitcodes) is list:
 			return rc == exitcodes
+		# if exitcodes is a list of exitcode
 		for rc in exitcodes:
 			if rc == rc:
 				return True
 		return False
 
-	def relaunch_if_needed(self, autorestart, exitcodes, startretries):
+	def lived_enough(self, starttime):
+		"""Return true if the progs lifetime was too short."""
+		# The program wasn't started/killed at all
+		if not hasattr(self, "starttime") or not hasattr(self, "closetime") \
+ 				or not starttime:
+			return False
+		# Test program lifetime
+		td = datetime.timedelta(seconds = starttime)
+		# print("diff time: ", (self.closetime - self.starttime), " diff ", td)
+		if (self.closetime - self.starttime) >= td:
+			return True
+		return False
+
+	def relaunch_if_needed(self, autorestart, exitcodes, startretries, starttime):
 		"""Require that set_execution_vars has already been called"""
 		if not self.popen:
 			return False
-		rc = self.popen.poll()
-		if rc:
+		# if program returned
+		if self.popen.poll() != None:
+			if not hasattr(self, "closetime") or not self.closetime:
+				self.closetime = datetime.datetime.now()
 			if self.nb_start_retries > startretries:
-				return
+				return False
+			# print(autorestart, " is unexpected ", autorestart == AutoRestartEnum.unexpected,  " return codes ", exitcodes, " is allow ", \
+			# 		self.return_code_is_allowed(self.popen.poll(), exitcodes))
+			# print("lived_enough ", self.lived_enough(starttime))
 			if autorestart == AutoRestartEnum.unexpected and \
-					not self.return_code_is_allowed(rc, exitcodes):
+					self.return_code_is_allowed(self.popen.poll(), exitcodes) and \
+					self.lived_enough(starttime):
 				return False
 			self.execute()
 			return True
@@ -94,3 +119,5 @@ class Process:
 			if Process.check_pid_is_alive(self.popen.pid):
 				# print("signal ", Process.print_signal(stopsignal))
 				os.kill(self.popen.pid, stopsignal)
+				if not Process.check_pid_is_alive(self.popen.pid):
+					self.closetime = datetime.datetime.now()

@@ -38,14 +38,13 @@ class Program:
 	"""Which return codes represent an "expected" exit status"""
 	exitcodes = os.EX_OK
 	"""How long the program should be running after it’s started for it to be considered successfully started"""
-	starttime = 1
+	starttime = None
 	"""How many times a restart should be attempted before aborting"""
 	startretries = 0
 	"""Which signal should be used to stop (i.e. exit gracefully) the program"""
 	stopsignal = signal.SIGTERM
 	"""How long to wait after a graceful stop before killing the program"""
-	stoptime = 1
-
+	stoptime = None
 	"""The command to use to launch the program"""
 	cmd = False
 	"""A working directory to set before launching the program"""
@@ -116,11 +115,12 @@ class Program:
 		self.execute()
 
 	def relaunch_if_needed(self):
+		# print("relaunch_if_needed")
 		if self.autorestart == AutoRestartEnum.never or self.startretries < 1:
 			return
 		for proc in self.processes:
 			proc.relaunch_if_needed(self.autorestart, self.exitcodes,
-					self.startretries)
+					self.startretries, self.starttime)
 
 	def kill(self):
 		for proc in self.processes:

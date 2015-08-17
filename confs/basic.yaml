@@ -18,12 +18,21 @@
 #     umask: 777
 
 # quitting the program must display sig_quit
-test_stopsignal:
-    cmd: "trap 'echo sig_int' 2 ; trap 'echo sig_quit' 3 ; tail -f ls.txt"
-    stopsignal: quit
+# test_stopsignal:
+#     cmd: "trap 'echo sig_int' 2 ; trap 'echo sig_quit' 3 ; tail -f ls.txt"
+#     stopsignal: quit
 
 # it must attempt 3 time to relaunch this program (total tries = 4)
 # test_startretries:
 #     cmd: "cat no_file"
 #     startretries: 3
 
+# the first cmd must be restarted not the second
+test_starttime1:
+    cmd: "sleep 2 ; echo should restart"
+    starttime: 3
+    startretries: 1
+test_starttime2:
+    cmd: "sleep 2 ; echo should not restart"
+    starttime: 1
+    startretries: 5
