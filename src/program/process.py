@@ -5,6 +5,7 @@ import signal
 import datetime
 
 from .auto_restart_enum import AutoRestartEnum
+from .process_status_enum import ProcessStatusEnum
 
 class Process:
 	"""
@@ -117,3 +118,13 @@ class Process:
 				os.kill(self.popen.pid, stopsignal)
 				if not Process.check_pid_is_alive(self.popen.pid):
 					self.closetime = datetime.datetime.now()
+
+	def get_status(self, exitcodes):
+		if not self.popen:
+			return ProcessStatusEnum.NOT_LAUNCH
+		if self.popen.poll() == None:
+			return ProcessStatusEnum.RUNNING
+		if self.return_code_is_allowed(self.popen.poll(), exitcodes):
+			return ProcessStatusEnum.STOP_OK
+		else:
+			return ProcessStatusEnum.STOP_KO

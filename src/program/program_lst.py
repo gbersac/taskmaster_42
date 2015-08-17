@@ -64,3 +64,8 @@ class ProgramLst:
 		for prog in self.lst:
 			prog.kill()
 
+	def print_status(self):
+		for prog in self.lst:
+			print(prog.name, " : ", prog.get_status())
+			# "{0}: {1}". format(prog.name, prog.get_status())
+

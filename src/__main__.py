@@ -1,4 +1,6 @@
+import time
 import threading
+import datetime
 import cmd
 import os
 import sys
@@ -7,7 +9,7 @@ import shlex
 import signal
 import readline
 
-from command import exit
+from command import exit, status
 from program.program import Program
 from program.program_lst import ProgramLst
 
@@ -29,24 +31,25 @@ def thread_check_progs():
 		progs_lock.acquire(True)
 		progs.check()
 		progs_lock.release()
+		time.sleep(0.01)
 
 class CommandInterface(cmd.Cmd):
 	"""Command line argument utilities."""
 
 	prompt = "taskmaster>>> "
 
-	def cmdloop(self):
-		return cmd.Cmd.cmdloop(self)
-
 	def do_exit(self, line):
 		exit.execute(progs)
+		return True
 
 	def do_EOF(self, line):
 		exit.execute(progs)
 		return True
 
-	def postloop(self):
-		print
+	def do_status(self, line):
+		progs_lock.acquire(True)
+		status.execute(progs)
+		progs_lock.release()
 
 if __name__ == '__main__':
 	# create signal handler

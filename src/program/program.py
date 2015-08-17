@@ -5,6 +5,7 @@ import signal
 
 from .process import Process
 from .auto_restart_enum import AutoRestartEnum
+from .process_status_enum import ProcessStatusEnum
 
 class ProgramWithoutCmdError(Exception):
     def __init__(self, _name):
@@ -125,3 +126,21 @@ class Program:
 	def kill(self):
 		for proc in self.processes:
 			proc.kill(self.stopsignal)
+
+	def nb_proc_status(self, status):
+		fil = filter(lambda x :
+				x.get_status(self.exitcodes) == status, self.processes)
+		return len(list(fil))
+
+	def get_status(self):
+		if not self.processes or len(self.processes) == 0:
+			return "no process"
+		nb_proc_not_launched = self.nb_proc_status(ProcessStatusEnum.NOT_LAUNCH)
+		# all process are launched or none
+		if nb_proc_not_launched > 0:
+			return "not launched"
+		nb_proc_running = self.nb_proc_status(ProcessStatusEnum.RUNNING)
+		nb_proc_ok = self.nb_proc_status(ProcessStatusEnum.STOP_OK)
+		nb_proc_ko = self.nb_proc_status(ProcessStatusEnum.STOP_KO)
+		return "{0} process running, {1} ok and {2} ko". \
+				format(nb_proc_running, nb_proc_ok, nb_proc_ko)
