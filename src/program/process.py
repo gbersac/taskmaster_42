@@ -72,7 +72,6 @@ class Process:
 			return False
 		# Test program lifetime
 		td = datetime.timedelta(seconds = starttime)
-		# print("diff time: ", (self.closetime - self.starttime), " diff ", td)
 		if (self.closetime - self.starttime) >= td:
 			return True
 		return False
@@ -87,9 +86,6 @@ class Process:
 				self.closetime = datetime.datetime.now()
 			if self.nb_start_retries > startretries:
 				return False
-			# print(autorestart, " is unexpected ", autorestart == AutoRestartEnum.unexpected,  " return codes ", exitcodes, " is allow ", \
-			# 		self.return_code_is_allowed(self.popen.poll(), exitcodes))
-			# print("lived_enough ", self.lived_enough(starttime))
 			if autorestart == AutoRestartEnum.unexpected and \
 					self.return_code_is_allowed(self.popen.poll(), exitcodes) and \
 					self.lived_enough(starttime):

@@ -1,3 +1,4 @@
+import curses
 import os
 import yaml
 import sys
@@ -58,8 +59,13 @@ def load_conf_files():
 		progs = progs + load_one_conf_files(file_name)
 	return ProgramLst(progs)
 
+def print_command_prompt():
+	sys.stdout.write("taskmaster>>> ")
+	sys.stdout.flush()
+
 def signal_handler(signal, frame):
-    execute_command("exit", progs)
+	if type(progs) == ProgramLst:
+		execute_command("exit", progs)
 
 if __name__ == '__main__':
 	signal.signal(signal.SIGINT, signal_handler)
@@ -67,7 +73,7 @@ if __name__ == '__main__':
 	progs.launch()
 
 	# Reading the stdin
-	sys.stdout.write("taskmaster>>> ")
+	print_command_prompt()
 	while True:
 		ready = select.select([sys.stdin], [], [], 0.1)[0]
 		if not ready:
@@ -77,4 +83,4 @@ if __name__ == '__main__':
 				line = file.readline()
 				if line:
 					execute_command(line, progs)
-					sys.stdout.write("taskmaster>>> ")
+					print_command_prompt()
