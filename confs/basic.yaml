@@ -37,11 +37,19 @@
 #     starttime: 1
 #     startretries: 5
 
+# should restart
+test_stoptime:
+    cmd: "trap 'echo sig_int' 2 ; trap 'echo sig_term' 15 ; trap 'echo sig_quit' 3 ; tail -f ls.txt > /tmp/blop"
+    # stopsignal: quit
+    stoptime: 1
+    startretries: 5
+
+
 # program to test other
-prog_ls:
-    cmd: "ls -l"
-    stdout: "ls.txt"
-prog_tail:
-    cmd: "tail -f ls.txt"
-    stdout: "tail.txt"
-    # autostart: False
+# prog_ls:
+#     cmd: "ls -l"
+#     stdout: "ls.txt"
+# prog_tail:
+#     cmd: "tail -f ls.txt"
+#     stdout: "tail.txt"
+#     # autostart: False

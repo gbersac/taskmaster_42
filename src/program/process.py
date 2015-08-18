@@ -17,6 +17,8 @@ class Process:
 	"""
 	popen = None
 
+	kill_by_user = False
+
 	def __init__(self, name, cmd):
 		self.cmd = cmd
 		self.name = name
@@ -43,6 +45,7 @@ class Process:
 	def execute(self):
 		"""Require that set_execution_vars has already been called"""
 		self.nb_start_retries += 1
+		kill_by_user = False
 		try:
 			stdoutf = self.open_standard_files(self.stdout)
 			stderrf = self.open_standard_files(self.stderr)
@@ -78,29 +81,50 @@ class Process:
 			return True
 		return False
 
-	def relaunch_if_needed(self, autorestart, exitcodes, startretries, starttime):
+	def restart_if_needed(self, autorestart, exitcodes, startretries, starttime):
+		"""Test if need restart"""
+		# test if var allow restart
+		if self.nb_start_retries > startretries or not self.kill_by_user:
+			return False
+		if self.autorestart == AutoRestartEnum.never or \
+				self.startretries < 1:
+			return
+		if autorestart == AutoRestartEnum.unexpected and \
+				self.return_code_is_allowed(rv, exitcodes) and \
+				self.lived_enough(starttime):
+			return False
+		self.execute()
+
+	def force_kill_if_needed(self, stoptime):
+		if not hasattr(self, "closetime") or self.closetime == None:
+			return
+		if not Process.check_pid_is_alive(self.popen.pid) or \
+				not hasattr(self, "closetime") or self.closetime == None or \
+				stoptime == None:
+			return
+		diff = (datetime.datetime.now() - self.closetime)
+		if diff > datetime.timedelta(seconds = stoptime):
+			logger.log("force kill of process for prog " + self.name)
+			os.kill(self.popen.pid, 9)
+
+	def check(self, autorestart, exitcodes, startretries, starttime, stoptime):
 		"""Require that set_execution_vars has already been called"""
 		if not self.popen:
 			return False
 		rv = self.popen.poll()
+		# test if force kill needed
+		self.force_kill_if_needed(stoptime)
 		# if program returned
 		if rv != None:
+			# test if process recently quitted
 			if not hasattr(self, "closetime") or not self.closetime:
 				self.closetime = datetime.datetime.now()
 				logger.log("process in prog " + self.name + \
 						" has stop, return code : " + str(rv))
-			if self.nb_start_retries > startretries:
-				return False
-			if self.autorestart == AutoRestartEnum.never or \
-					self.startretries < 1:
-				return
-			if autorestart == AutoRestartEnum.unexpected and \
-					self.return_code_is_allowed(rv, exitcodes) and \
-					self.lived_enough(starttime):
-				return False
-			self.execute()
-			return True
-		return False
+
+			# restart if needed
+			self.restart_if_needed(autorestart, exitcodes, startretries, starttime)
+
 
 	def check_pid_is_alive(pid):
 		try:
@@ -119,6 +143,7 @@ class Process:
 			return "SIGQUIT"
 
 	def kill(self, stopsignal):
+		kill_by_user = True
 		if self.popen and not self.popen.poll():
 			if Process.check_pid_is_alive(self.popen.pid):
 				os.kill(self.popen.pid, stopsignal)

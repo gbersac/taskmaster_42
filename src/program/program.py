@@ -120,10 +120,10 @@ class Program:
 	def relaunch(self):
 		self.execute()
 
-	def relaunch_if_needed(self):
+	def check(self):
 		for proc in self.processes:
-			proc.relaunch_if_needed(self.autorestart, self.exitcodes,
-					self.startretries, self.starttime)
+			proc.check(self.autorestart, self.exitcodes, self.startretries, \
+					self.starttime, self.stoptime)
 
 	def kill(self):
 		for proc in self.processes:

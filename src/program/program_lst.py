@@ -80,7 +80,7 @@ class ProgramLst:
 	"""Check the state of all the programs"""
 	def check(self):
 		for prog in self.lst:
-			prog.relaunch_if_needed()
+			prog.check()
 
 	def kill_all(self):
 		for prog in self.lst:
@@ -89,7 +89,6 @@ class ProgramLst:
 	def print_status(self):
 		for prog in self.lst:
 			print(prog.name, " : ", prog.get_status())
-			# "{0}: {1}". format(prog.name, prog.get_status())
 
 	def get_by_name(self, prog_name):
 		for prog in self.lst:
