@@ -54,6 +54,16 @@ class CommandInterface(cmd.Cmd):
 			return None
 		return sline[0]
 
+	def prog_complete(self, text, line, begidx, endidx):
+		prog_list = progs.name_list()
+		if not text:
+			completions = progs.name_list()
+		else:
+			completions = [ f for f in prog_list
+							if f.startswith(text)
+							]
+		return completions
+
 	def do_status(self, line):
 		progs_lock.acquire(True)
 		status.execute(progs)
@@ -65,17 +75,26 @@ class CommandInterface(cmd.Cmd):
 		start.execute(progs, prog_name)
 		progs_lock.release()
 
+	def complete_start(self, text, line, begidx, endidx):
+		return CommandInterface.prog_complete(self, text, line, begidx, endidx)
+
 	def do_stop(self, line):
 		progs_lock.acquire(True)
 		prog_name = CommandInterface.get_prog_name(line)
 		stop.execute(progs, prog_name)
 		progs_lock.release()
 
+	def complete_stop(self, text, line, begidx, endidx):
+		return CommandInterface.prog_complete(self, text, line, begidx, endidx)
+
 	def do_restart(self, line):
 		progs_lock.acquire(True)
 		prog_name = CommandInterface.get_prog_name(line)
 		restart.execute(progs, prog_name)
 		progs_lock.release()
+
+	def complete_restart(self, text, line, begidx, endidx):
+		return CommandInterface.prog_complete(self, text, line, begidx, endidx)
 
 	def do_reload(self, line):
 		global progs

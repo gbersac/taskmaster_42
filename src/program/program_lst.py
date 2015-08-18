@@ -97,6 +97,12 @@ class ProgramLst:
 				return prog
 		raise NoProgError(prog_name)
 
+	def name_list(self):
+		to_return = []
+		for prog in self.lst:
+			to_return.append(prog.name)
+		return to_return
+
 	def reload(self):
 		for prog in self.lst:
 			if hasattr(prog, "keep_old_process"):
