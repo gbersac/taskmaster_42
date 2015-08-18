@@ -76,6 +76,12 @@ class CommandInterface(cmd.Cmd):
 		restart.execute(progs, prog_name)
 		progs_lock.release()
 
+	def do_reload(self, line):
+		global progs
+		progs_lock.acquire(True)
+		progs = reload.execute(progs)
+		progs_lock.release()
+
 if __name__ == '__main__':
 	# create signal handler
 	signal.signal(signal.SIGINT, signal_handler)

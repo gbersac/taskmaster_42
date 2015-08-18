@@ -97,6 +97,9 @@ class Program:
 		for i in range(0, self.numprocs):
 			self.processes.append(Process(self.name, self.cmd))
 
+	def __str__(self):
+		return "Prog<" + self.name + ">"
+
 	def get_expanded_env(self):
 		new_env = os.environ
 		if not hasattr(self, "env"):
@@ -137,10 +140,54 @@ class Program:
 			return "no process"
 		nb_proc_not_launched = self.nb_proc_status(ProcessStatusEnum.NOT_LAUNCH)
 		# all process are launched or none
-		if nb_proc_not_launched > 0:
-			return "not launched"
 		nb_proc_running = self.nb_proc_status(ProcessStatusEnum.RUNNING)
 		nb_proc_ok = self.nb_proc_status(ProcessStatusEnum.STOP_OK)
 		nb_proc_ko = self.nb_proc_status(ProcessStatusEnum.STOP_KO)
-		return "{0} process running, {1} ok and {2} ko". \
-				format(nb_proc_running, nb_proc_ok, nb_proc_ko)
+		return "{0} process running, {1} ok, {2} ko and {3} not launched". \
+				format(nb_proc_running, nb_proc_ok, nb_proc_ko, nb_proc_not_launched)
+
+	def is_running(self):
+		return self.nb_proc_status(ProcessStatusEnum.RUNNING) > 0
+
+	def reload_has_substantive_change(self, nprog):
+		"""
+		Return true if the new version of the prog has differences important
+		enough to require that old process should be restarted.
+		"""
+		if self.cmd != nprog.cmd or \
+				self.stdout != nprog.stdout or \
+				self.stderr != nprog.stderr or \
+				hasattr(self, "env") and self.env != nprog.env or \
+				hasattr(self, "workingdir") and self.workingdir != nprog.workingdir or \
+				self.umask != nprog.umask :
+			return True
+		return False
+
+	def keep_running_process(self, nprog):
+		"""
+		Return true if the program's processes should be keep
+		while reloading this program.
+		"""
+		if nprog.name != self.name or not self.is_running():
+			return False
+		erase_old_process = self.reload_has_substantive_change(nprog)
+		if erase_old_process:
+			self.kill()
+		else:
+			nprog.processes = self.processes
+			nprog.keep_old_process = True
+		return erase_old_process
+
+	def reload(self):
+		"""To use only if the program is running and is being reloaded"""
+		newps = []
+		# print("nbproces self ", len(self.processes), " diff ", (self.numprocs - len(self.processes)))
+		if len(self.processes) < self.numprocs:
+			for x in range(0, (self.numprocs - len(self.processes))):
+				# print("new processes")
+				newp = Process(self.name, self.cmd)
+				self.processes.append(newp)
+				newps.append(newp)
+		if self.autostart:
+			for prog in newps:
+				prog.execute()

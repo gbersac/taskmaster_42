@@ -1,0 +1,9 @@
+prog_should_disapear:
+    cmd: "mv run.sh run.sh"
+prog_to_reload:
+    cmd: "ls -l"
+    stdout: "ls.txt"
+prog_tail_not_to_reload:
+    cmd: "tail -f ls.txt"
+    stdout: "tail.txt"
+    # autostart: False
