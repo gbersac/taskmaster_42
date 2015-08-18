@@ -9,7 +9,7 @@ import shlex
 import signal
 import readline
 
-from command import exit, status
+from command import exit, status, start, restart, stop, reload
 from program.program import Program
 from program.program_lst import ProgramLst
 
@@ -46,9 +46,34 @@ class CommandInterface(cmd.Cmd):
 		exit.execute(progs)
 		return True
 
+	def get_prog_name(line):
+		sline = shlex.split(line)
+		if len(sline) < 1:
+			print("*** Usage: cmd prog_name")
+			return None
+		return sline[0]
+
 	def do_status(self, line):
 		progs_lock.acquire(True)
 		status.execute(progs)
+		progs_lock.release()
+
+	def do_start(self, line):
+		progs_lock.acquire(True)
+		prog_name = CommandInterface.get_prog_name(line)
+		start.execute(progs, prog_name)
+		progs_lock.release()
+
+	def do_stop(self, line):
+		progs_lock.acquire(True)
+		prog_name = CommandInterface.get_prog_name(line)
+		stop.execute(progs, prog_name)
+		progs_lock.release()
+
+	def do_restart(self, line):
+		progs_lock.acquire(True)
+		prog_name = CommandInterface.get_prog_name(line)
+		restart.execute(progs, prog_name)
 		progs_lock.release()
 
 if __name__ == '__main__':

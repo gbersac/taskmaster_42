@@ -41,6 +41,15 @@ def load_conf_files():
 			progs = progs + nprogs
 	return progs
 
+class NoProgError(Exception):
+	"""Error raise when a program is expected and none can be found"""
+
+	def __init__(self, name):
+		self.name = name
+
+	def __str__(self):
+		return 'the program ' + self.name + ' does not exist'
+
 class ProgramLst:
 	"""List of all the programs managed by one taskmaster"""
 
@@ -69,3 +78,8 @@ class ProgramLst:
 			print(prog.name, " : ", prog.get_status())
 			# "{0}: {1}". format(prog.name, prog.get_status())
 
+	def get_by_name(self, prog_name):
+		for prog in self.lst:
+			if prog.name == prog_name:
+				return prog
+		raise NoProgError(prog_name)

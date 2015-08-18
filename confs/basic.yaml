@@ -28,11 +28,20 @@
 #     startretries: 3
 
 # the first cmd must be restarted not the second
-test_starttime1:
-    cmd: "sleep 2 ; echo should restart"
-    starttime: 3
-    startretries: 1
-test_starttime2:
-    cmd: "sleep 2 ; echo should not restart"
-    starttime: 1
-    startretries: 5
+# test_starttime1:
+#     cmd: "sleep 2 ; echo should restart"
+#     starttime: 3
+#     startretries: 1
+# test_starttime2:
+#     cmd: "sleep 2 ; echo should not restart"
+#     starttime: 1
+#     startretries: 5
+
+# program to test other
+prog_ls:
+    cmd: "ls -l"
+    stdout: "ls.txt"
+prog_tail:
+    cmd: "tail -f ls.txt"
+    stdout: "tail.txt"
+    # autostart: False
