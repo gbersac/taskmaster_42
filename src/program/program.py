@@ -6,6 +6,7 @@ import signal
 from .process import Process
 from .auto_restart_enum import AutoRestartEnum
 from .process_status_enum import ProcessStatusEnum
+import logger
 
 class ProgramWithoutCmdError(Exception):
     def __init__(self, _name):
@@ -109,6 +110,7 @@ class Program:
 		return new_env
 
 	def execute(self):
+		logger.log("execute " + self.name)
 		new_env = self.get_expanded_env()
 		for proc in self.processes:
 			proc. set_execution_vars(self.stdout, self.stderr, new_env, \
@@ -119,9 +121,6 @@ class Program:
 		self.execute()
 
 	def relaunch_if_needed(self):
-		# print("relaunch_if_needed")
-		if self.autorestart == AutoRestartEnum.never or self.startretries < 1:
-			return
 		for proc in self.processes:
 			proc.relaunch_if_needed(self.autorestart, self.exitcodes,
 					self.startretries, self.starttime)
@@ -139,7 +138,6 @@ class Program:
 		if not self.processes or len(self.processes) == 0:
 			return "no process"
 		nb_proc_not_launched = self.nb_proc_status(ProcessStatusEnum.NOT_LAUNCH)
-		# all process are launched or none
 		nb_proc_running = self.nb_proc_status(ProcessStatusEnum.RUNNING)
 		nb_proc_ok = self.nb_proc_status(ProcessStatusEnum.STOP_OK)
 		nb_proc_ko = self.nb_proc_status(ProcessStatusEnum.STOP_KO)
@@ -181,10 +179,8 @@ class Program:
 	def reload(self):
 		"""To use only if the program is running and is being reloaded"""
 		newps = []
-		# print("nbproces self ", len(self.processes), " diff ", (self.numprocs - len(self.processes)))
 		if len(self.processes) < self.numprocs:
 			for x in range(0, (self.numprocs - len(self.processes))):
-				# print("new processes")
 				newp = Process(self.name, self.cmd)
 				self.processes.append(newp)
 				newps.append(newp)

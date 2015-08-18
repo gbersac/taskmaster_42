@@ -2,6 +2,7 @@
 ls.txt
 tail.txt
 test_umask
+log.txt
 
 # system files
 .DS_Store

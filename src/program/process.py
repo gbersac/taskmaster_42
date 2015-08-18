@@ -6,6 +6,7 @@ import datetime
 
 from .auto_restart_enum import AutoRestartEnum
 from .process_status_enum import ProcessStatusEnum
+import logger
 
 class Process:
 	"""
@@ -81,14 +82,20 @@ class Process:
 		"""Require that set_execution_vars has already been called"""
 		if not self.popen:
 			return False
+		rv = self.popen.poll()
 		# if program returned
-		if self.popen.poll() != None:
+		if rv != None:
 			if not hasattr(self, "closetime") or not self.closetime:
 				self.closetime = datetime.datetime.now()
+				logger.log("process in prog " + self.name + \
+						" has stop, return code : " + str(rv))
 			if self.nb_start_retries > startretries:
 				return False
+			if self.autorestart == AutoRestartEnum.never or \
+					self.startretries < 1:
+				return
 			if autorestart == AutoRestartEnum.unexpected and \
-					self.return_code_is_allowed(self.popen.poll(), exitcodes) and \
+					self.return_code_is_allowed(rv, exitcodes) and \
 					self.lived_enough(starttime):
 				return False
 			self.execute()
@@ -114,10 +121,9 @@ class Process:
 	def kill(self, stopsignal):
 		if self.popen and not self.popen.poll():
 			if Process.check_pid_is_alive(self.popen.pid):
-				# print("signal ", Process.print_signal(stopsignal))
 				os.kill(self.popen.pid, stopsignal)
-				if not Process.check_pid_is_alive(self.popen.pid):
-					self.closetime = datetime.datetime.now()
+				logger.log("process in prog " + self.name + " has been killed")
+				self.closetime = datetime.datetime.now()
 
 	def get_status(self, exitcodes):
 		if not self.popen:

@@ -12,6 +12,7 @@ import readline
 from command import exit, status, start, restart, stop, reload
 from program.program import Program
 from program.program_lst import ProgramLst
+import logger
 
 progs = None
 progs_lock = None
@@ -83,6 +84,7 @@ class CommandInterface(cmd.Cmd):
 		progs_lock.release()
 
 if __name__ == '__main__':
+	logger.log("BEGIN TASKMASTER")
 	# create signal handler
 	signal.signal(signal.SIGINT, signal_handler)
 
