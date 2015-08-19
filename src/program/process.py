@@ -61,11 +61,12 @@ class Process:
 
 	def return_code_is_allowed(self, rc, exitcodes):
 		# if exitcodes is only one code
+		# print(exitcodes, " ==? ", rc, " => ", rc == exitcodes)
 		if not type(exitcodes) is list:
 			return rc == exitcodes
 		# if exitcodes is a list of exitcode
-		for rc in exitcodes:
-			if rc == rc:
+		for ec in exitcodes:
+			if ec == rc:
 				return True
 		return False
 
@@ -74,25 +75,28 @@ class Process:
 		# The program wasn't started/killed at all
 		if not hasattr(self, "starttime") or not hasattr(self, "closetime") \
  				or not starttime:
-			return False
+			return True
 		# Test program lifetime
 		td = datetime.timedelta(seconds = starttime)
-		if (self.closetime - self.starttime) >= td:
-			return True
-		return False
+		if (self.closetime - self.starttime) <= td:
+			return False
+		return True
 
-	def restart_if_needed(self, autorestart, exitcodes, startretries, starttime):
+	def restart_if_needed(self, autorestart, exitcodes, startretries, starttime, rv):
 		"""Test if need restart"""
 		# test if var allow restart
-		if self.nb_start_retries > startretries or not self.kill_by_user:
+		if self.nb_start_retries > startretries or self.kill_by_user:
 			return False
-		if self.autorestart == AutoRestartEnum.never or \
-				self.startretries < 1:
+		if autorestart == AutoRestartEnum.never or \
+				startretries < 1:
 			return
+		# print("##", self.name, " return_code_is_allowed ", self.return_code_is_allowed(rv, exitcodes))
+		# print("##", self.name, " lived_enough ", not self.lived_enough(starttime))
 		if autorestart == AutoRestartEnum.unexpected and \
 				self.return_code_is_allowed(rv, exitcodes) and \
 				self.lived_enough(starttime):
 			return False
+		# print("execute")
 		self.execute()
 
 	def force_kill_if_needed(self, stoptime):
@@ -123,7 +127,7 @@ class Process:
 						" has stop, return code : " + str(rv))
 
 			# restart if needed
-			self.restart_if_needed(autorestart, exitcodes, startretries, starttime)
+			self.restart_if_needed(autorestart, exitcodes, startretries, starttime, rv)
 
 	def check_pid_is_alive(pid):
 		try:

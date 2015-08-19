@@ -1,15 +1,76 @@
-# should print ls -l in ls.txt
-test_stdout:
-    cmd: "ls -l"
-    stdout: "ls.txt"
-
-# should print ls for tmp in ls.txt
-# test_workingdir:
+#### should print ls -l in ls.txt
+# test_stdout:
 #     cmd: "ls -l"
-#     workingdir: "/tmp"
 #     stdout: "ls.txt"
 
-#should print the env
+#### output 2 ls in ls.txt
+# test_numprocs:
+#     cmd: "ls -l"
+#     stdout: "ls.txt"
+#     numprocs: 2
+
+#### output nothing in ls.txt
+# test_autostart:
+#     cmd: "ls -l"
+#     stdout: "ls.txt"
+#     autostart: False
+
+#### Test for autorestart
+# test_autorestart1:
+#     cmd:    "echo test_autorestart1 not restart; cat unknow_file 2> /tmp/error"
+#     startretries: 1
+#     autorestart: never
+# test_autorestart2:
+#     cmd:    "echo test_autorestart2 restart; cat unknow_file 2> /tmp/error"
+#     startretries: 1
+#     autorestart: unexpected
+# test_autorestart3:
+#     cmd:    "echo test_autorestart3 not restart;"
+#     startretries: 1
+#     autorestart: unexpected
+# test_autorestart4:
+#     cmd:    "echo test_autorestart4 restart;"
+#     startretries: 1
+#     autorestart: always
+
+#### Test extcodes
+# test_exitcodes1:
+#     cmd: "echo should restart;  cat unknow_file 2> /tmp/error"
+#     startretries: 1
+# test_exitcodes2:
+#     cmd: "echo should not restart;  cat unknow_file 2> /tmp/error"
+#     startretries: 1
+#     exitcodes:
+#         - 0
+#         - 1
+#        - -1
+
+#### the first cmd must be restarted not the second
+# test_starttime1:
+#     cmd: "sleep 2 ; echo should restart"
+#     starttime: 3
+#     startretries: 2
+# test_starttime2:
+#     cmd: "sleep 2 ; echo should not restart"
+#     starttime: 1
+#     startretries: 1
+
+#### it must attempt 3 time to relaunch this program (total tries = 4)
+# test_startretries:
+#     cmd: "cat no_file"
+#     startretries: 3
+
+#### Change code process kill
+# test_stopsignal:
+#     cmd: "tail -f ls.txt"
+#     stopsignal: quit
+
+#### should not be kill imediatelly
+# test_stoptime:
+#     cmd: "trap 'echo sig_int' 2 ; trap 'echo sig_term' 15 ; trap 'echo sig_quit' 3 ; tail -f ls.txt > /tmp/blop"
+#     stoptime: 3
+
+####should print the env
 # test_env:
 #     cmd: "echo $STARTED_BY ; echo $ANSWER"
 #     workingdir: /tmp
@@ -17,38 +78,25 @@ test_stdout:
 #         STARTED_BY: taskmaster
 #         ANSWER: 42
 
-# the permission of test_umask should be none
+#### should print ls for tmp in ls.txt
+# test_workingdir:
+#     cmd: "ls -l"
+#     workingdir: "/tmp"
+#     stdout: "ls.txt"
+
+#### the permission of test_umask should be none
 # test_umask:
 #     cmd: "rm -f test_umask; touch test_umask ; ls -l test_umask"
 #     umask: 777
 
-# it must attempt 3 time to relaunch this program (total tries = 4)
-# test_startretries:
-#     cmd: "cat no_file"
-#     startretries: 3
-
-# the first cmd must be restarted not the second
-# test_starttime1:
-#     cmd: "sleep 2 ; echo should restart"
-#     starttime: 3
-#     startretries: 1
-# test_starttime2:
-#     cmd: "sleep 2 ; echo should not restart"
-#     starttime: 1
-#     startretries: 5
-
-# should not be kill imediatelly
-# test_stoptime:
-#     cmd: "trap 'echo sig_int' 2 ; trap 'echo sig_term' 15 ; trap 'echo sig_quit' 3 ; tail -f ls.txt > /tmp/blop"
-#     stoptime: 1
-#     startretries: 5
 
 
 # program to test other
-# prog_ls:
-#     cmd: "ls -l"
-#     stdout: "ls.txt"
-# prog_tail:
-#     cmd: "tail -f ls.txt"
-#     stdout: "tail.txt"
-#     # autostart: False
+prog_ls:
+    cmd: "ls -l"
+    stdout: "ls.txt"
+prog_tail:
+    cmd: "tail -f ls.txt"
+    stdout: "tail.txt"
+    # autostart: False
+    startretries: 2
