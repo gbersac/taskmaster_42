@@ -1,12 +1,17 @@
-# blop:
-#     cmd: "tail -f ls.txt"
-#     numprocs: 3
-#     autorestart: never
-#     stdout: "tail.txt"
+# should print ls -l in ls.txt
+test_stdout:
+    cmd: "ls -l"
+    stdout: "ls.txt"
 
-#should print the ls of tmp
+# should print ls for tmp in ls.txt
 # test_workingdir:
-#     cmd: "ls"
+#     cmd: "ls -l"
+#     workingdir: "/tmp"
+#     stdout: "ls.txt"
+
+#should print the env
+# test_env:
+#     cmd: "echo $STARTED_BY ; echo $ANSWER"
 #     workingdir: /tmp
 #     env:
 #         STARTED_BY: taskmaster
@@ -16,11 +21,6 @@
 # test_umask:
 #     cmd: "rm -f test_umask; touch test_umask ; ls -l test_umask"
 #     umask: 777
-
-# quitting the program must display sig_quit
-# test_stopsignal:
-#     cmd: "trap 'echo sig_int' 2 ; trap 'echo sig_quit' 3 ; tail -f ls.txt"
-#     stopsignal: quit
 
 # it must attempt 3 time to relaunch this program (total tries = 4)
 # test_startretries:
@@ -37,12 +37,11 @@
 #     starttime: 1
 #     startretries: 5
 
-# should restart
-test_stoptime:
-    cmd: "trap 'echo sig_int' 2 ; trap 'echo sig_term' 15 ; trap 'echo sig_quit' 3 ; tail -f ls.txt > /tmp/blop"
-    # stopsignal: quit
-    stoptime: 1
-    startretries: 5
+# should not be kill imediatelly
+# test_stoptime:
+#     cmd: "trap 'echo sig_int' 2 ; trap 'echo sig_term' 15 ; trap 'echo sig_quit' 3 ; tail -f ls.txt > /tmp/blop"
+#     stoptime: 1
+#     startretries: 5
 
 
 # program to test other

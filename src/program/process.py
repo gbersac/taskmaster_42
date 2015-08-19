@@ -125,7 +125,6 @@ class Process:
 			# restart if needed
 			self.restart_if_needed(autorestart, exitcodes, startretries, starttime)
 
-
 	def check_pid_is_alive(pid):
 		try:
 			os.kill(pid, 0)
@@ -146,6 +145,7 @@ class Process:
 		kill_by_user = True
 		if self.popen and not self.popen.poll():
 			if Process.check_pid_is_alive(self.popen.pid):
+				# print("kill ", Process.print_signal(stopsignal), stopsignal, " pid ", self.popen.pid)
 				os.kill(self.popen.pid, stopsignal)
 				logger.log("process in prog " + self.name + " has been killed")
 				self.closetime = datetime.datetime.now()
